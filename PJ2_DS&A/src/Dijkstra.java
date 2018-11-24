@@ -3,7 +3,9 @@ import java.util.Stack;
 
 class Dijkstra {
     private ArrayList<Vertex> lastPath1;
-    private ArrayList<Vertex> lastPath2;  //记忆两次路线
+    private ArrayList<Vertex> lastPath2;
+    private ArrayList<Vertex> lastPath3;
+    private ArrayList<Vertex> lastPath4;  //记忆四次路线
     private void DIJKSTRA(ArrayList<Vertex> vertices, Vertex start, Vertex end){ //某个算法
         initialize_single_source(vertices,start);
         MinHeap minHeap = new MinHeap(vertices);
@@ -49,6 +51,20 @@ class Dijkstra {
             }
         }
 
+        if(lastPath3 != null){ //记忆
+            ArrayList<Vertex> mayPath = checkPath(start,end,lastPath3);
+            if(mayPath != null){
+                return mayPath;
+            }
+        }
+
+        if(lastPath4 != null){ //记忆
+            ArrayList<Vertex> mayPath = checkPath(start,end,lastPath4);
+            if(mayPath != null){
+                return mayPath;
+            }
+        }
+
         DIJKSTRA(vertices1,start,end);
         ArrayList<Vertex> path = new ArrayList<>();
         Stack<Vertex> vertices = new Stack<>();
@@ -68,9 +84,15 @@ class Dijkstra {
                 lastPath1 = path;
             }else if(lastPath2 == null){
                 lastPath2 = path;
+            }else if(lastPath3 == null){
+                lastPath3 = path;
+            }else if(lastPath4 == null){
+                lastPath4 = path;
             }else{
                 lastPath1 = lastPath2;
-                lastPath2 = path;
+                lastPath2 = lastPath3;
+                lastPath3 = lastPath4;
+                lastPath4 = path;
             }
             return path;
         }

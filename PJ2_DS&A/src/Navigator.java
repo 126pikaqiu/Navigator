@@ -166,7 +166,7 @@ class Navigator {
         return dijkstra.getPath(vertices,startV,endV);
     }
 
-    ArrayList<String> getPath(String start,String end){
+    private ArrayList<String> getPath(String start, String end){
         ArrayList<Vertex> path = getPath1(start,end);
         ArrayList<String> path1 = new ArrayList<>();
         if(path == null){
@@ -189,5 +189,28 @@ class Navigator {
         }
         path1.add(end);
         return path1;
+    }
+
+    ArrayList<String> getPath(String[] station){
+        ArrayList<String> path = new ArrayList<>();
+        for(String value:station){
+            if(exist(value) == null){
+                path.add("您输入的站点不存在");
+                return path;
+            }
+        }
+
+        String pre = station[0];
+        getPath(pre,station[station.length - 1]); //走一遍从起点到终点的路线，可以作为记忆,可能极其重要哟。
+        ArrayList<String> path1;
+        int i;
+        for(i = 1; i < station.length; i++){
+            path1 = getPath(pre,station[i]);
+            path1.remove(path1.size() - 1);
+            path.addAll(path1);
+            pre = station[i];
+        }
+        path.add(station[i - 1]);
+        return path;
     }
 }
