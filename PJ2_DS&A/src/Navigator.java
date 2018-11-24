@@ -107,6 +107,14 @@ class Navigator {
                     for(int i = 2; i < sheet.getRows(); i++) {
                         preStation = newStation;
                         stationName = sheet.getCell(0, i).getContents();
+
+                        //两个浦电路站
+                        if(name.equals("Line 4") && stationName.equals("浦电路")){
+                            stationName = stationName + "4";
+                        }else if(name.equals("Line 6") && stationName.equals("浦电路")){
+                            stationName = stationName + "6";
+                        }
+
                         time2 = sheet.getCell(1, i).getContents();
                         newStation = exist(stationName);
                         if(newStation == null) {
@@ -123,11 +131,18 @@ class Navigator {
                     }
                 }
             }
-//            Graph graph = new Graph(vertices);
-//            ArrayList<Edge> edges = graph.getEdges();
-//            for(Edge edge:edges){
-//                System.out.println(edge.getVertex1().getName() + "--" + edge.getVertex2().getName() + "  " + edge.getWeight() + edge.getLine());
-//            }
+
+            //四号线是环线
+            Vertex vertex1 = exist("宜山路");
+            Vertex vertex2 = exist("虹桥路");
+            Edge edge = new Edge(vertex1,vertex2,"Line 4",2);//2分钟
+            assert vertex1 != null;
+            vertex1.getEdges().add(edge);
+            assert vertex2 != null;
+            vertex2.getEdges().add(edge);
+            vertex1.getVertices().add(vertex2);
+            vertex2.getVertices().add(vertex1);
+
         }catch (BiffException | IOException e) {
             e.printStackTrace();
         }
