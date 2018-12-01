@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 class Navigator {
     private ArrayList<Vertex> vertices = new ArrayList<>();
-
+    private HashMap<String,Vertex> map = new HashMap<>();
     void loadMap(String path) {
         File input = new File(path);
         try {
@@ -16,126 +16,92 @@ class Navigator {
             int sheetSize = book.getNumberOfSheets();
             String name;
             String stationName;
-            String time1;
-            String time2 = "";
+            String time1 = null;
+            String time2;
+            int startRow;//起始行
+            Vertex newStation;
+            Vertex preStation;
+            Vertex binStation;//两个方向的站点
             for(int k = 0; k < sheetSize; k++) {
                 name = book.getSheetNames()[k];
                 Sheet sheet = book.getSheet(k);
+
                 if(k == 9 || k == 10) {
-                    //第一个站点
-                    Vertex newStation;
-                    stationName = sheet.getCell(0, 2).getContents();
-                    newStation = exist(stationName);
-                    if(newStation == null){
-                        newStation = new Vertex(stationName);
-                        vertices.add(newStation);
-                    }
-                    time1 = sheet.getCell(1, 2).getContents();
-                    Vertex preStation;
-                    Vertex binStation = null;//两个方向的站点
-                    int j = 0;//两个方向的站点对应的索引
-                    String time3 = "";
-                    //导入中间站点
-                    for(int i = 3; i < sheet.getRows(); i++) { //第一个方向和第二个方向的部分站点
-                        preStation = newStation;
-                        stationName = sheet.getCell(0, i).getContents();
-                        time2 = sheet.getCell(1, i).getContents();
-
-                        if(time2.equals("--") || sheet.getCell(2, i).getContents().equals("--")){ //跳过某些站点
-                            if(binStation == null){
-                                binStation = preStation;
-                                j = i;
-                                time3 = time1;
-                            }
-                            if(time2.equals("--"))
-                                continue;
-                        }
-
-                        newStation = exist(stationName);
-                        if (newStation == null) {
-                            newStation = new Vertex(stationName);
-                            vertices.add(newStation);
-                        }
-                        preStation.getVertices().add(newStation);
-                        newStation.getVertices().add(preStation);
-                        Edge edge = new Edge(preStation, newStation, name, getTime(time1, time2));
-                        preStation.getEdges().add(edge);
-                        newStation.getEdges().add(edge);
-                        edge = null; //我想释放资源
-                        time1 = time2;
-                    }
-
-                    preStation = binStation;
-                    time1 = time3;
-                    for(; j < sheet.getRows(); j++) { //第二个方向的分站点
-                        stationName = sheet.getCell(0, j).getContents();
-                        time2 = sheet.getCell(2, j).getContents();
-
-                        if(time2.equals("--")){ //跳过某些站点
-                            continue;
-                        }
-
-                        newStation = exist(stationName);
-                        if (newStation == null) {
-                            newStation = new Vertex(stationName);
-                            vertices.add(newStation);
-                        }
-                        assert preStation != null;
-                        preStation.getVertices().add(newStation);
-                        newStation.getVertices().add(preStation);
-                        Edge edge = new Edge(preStation, newStation, name, getTime(time1, time2));
-                        preStation.getEdges().add(edge);
-                        newStation.getEdges().add(edge);
-                        edge = null; //我想释放资源
-                        time1 = time2;
-                        preStation = newStation;
-                    }
-
+                    startRow = 2;
                 }else {
+                    startRow = 1;
+                }
 
-                    //第一个站点
-                    Vertex newStation;
-                    stationName = sheet.getCell(0, 1).getContents();
-                    newStation = exist(stationName);
-                    if(newStation == null){
-                        newStation = new Vertex(stationName);
-                        vertices.add(newStation);
+                newStation = null;
+                int j = sheet.getRows();//两个方向的站点对应的索引
+                String time3 = null;
+                binStation = null;
+
+                //导入中间站点
+                for(int i = startRow; i < sheet.getRows(); i++) { //第一个方向和第二个方向的部分站点
+
+                    preStation = newStation;
+                    stationName = sheet.getCell(0, i).getContents();
+                    time2 = sheet.getCell(1, i).getContents();
+
+                    //两个浦电路站,特殊处理
+                    if(name.equals("Line 4") && stationName.equals("浦电路")){
+                        stationName = stationName + "4";
+                    }else if(name.equals("Line 6") && stationName.equals("浦电路")){
+                        stationName = stationName + "6";
                     }
-                    time1 = sheet.getCell(1, 1).getContents();
-                    Vertex preStation;
-                    //导入中间站点
-                    for(int i = 2; i < sheet.getRows(); i++) {
-                        preStation = newStation;
-                        stationName = sheet.getCell(0, i).getContents();
 
-                        //两个浦电路站
-                        if(name.equals("Line 4") && stationName.equals("浦电路")){
-                            stationName = stationName + "4";
-                        }else if(name.equals("Line 6") && stationName.equals("浦电路")){
-                            stationName = stationName + "6";
+                    if(time2.equals("--") || (sheet.getColumns() > 2 && sheet.getCell(2, i).getContents().equals("--"))){ //跳过某些站点
+                        if(binStation == null){
+                            binStation = preStation;
+                            j = i;
+                            time3 = time1;
                         }
+                        if(time2.equals("--"))
+                            continue;
+                    }
 
-                        time2 = sheet.getCell(1, i).getContents();
-                        newStation = exist(stationName);
-                        if(newStation == null) {
-                            newStation = new Vertex(stationName);
-                            vertices.add(newStation);
-                        }
+                    newStation = exist(stationName);
+
+                    if(preStation != null){ //也就第一个站点的问题
                         preStation.getVertices().add(newStation);
                         newStation.getVertices().add(preStation);
-                        Edge edge = new Edge(preStation,newStation,name, getTime(time1, time2));
+                        Edge edge = new Edge(preStation, newStation, name, getTime(time1, time2));
                         preStation.getEdges().add(edge);
                         newStation.getEdges().add(edge);
                         edge = null; //我想释放资源
-                        time1 = time2;
                     }
+                    time1 = time2;
                 }
+
+                preStation = binStation;
+                time1 = time3;
+                for(; j < sheet.getRows(); j++) { //第二个方向的分站点
+                    stationName = sheet.getCell(0, j).getContents();
+                    time2 = sheet.getCell(2, j).getContents();
+
+                    if(time2.equals("--")){ //跳过某些站点
+                        continue;
+                    }
+
+                    newStation = exist(stationName);
+                    assert preStation != null;
+                    preStation.getVertices().add(newStation);
+                    newStation.getVertices().add(preStation);
+                    Edge edge = new Edge(preStation, newStation, name, getTime(time1, time2));
+                    preStation.getEdges().add(edge);
+                    newStation.getEdges().add(edge);
+                    edge = null; //我想释放资源
+                    time1 = time2;
+                    preStation = newStation;
+                }
+
             }
 
             //四号线是环线
             Vertex vertex1 = exist("宜山路");
             Vertex vertex2 = exist("虹桥路");
-            Edge edge = new Edge(vertex1,vertex2,"Line 4",2);//2分钟
+            Edge edge = new Edge(vertex1,vertex2,"Line 4",3);//3分钟
             assert vertex1 != null;
             vertex1.getEdges().add(edge);
             assert vertex2 != null;
@@ -149,12 +115,15 @@ class Navigator {
     }
 
     private Vertex exist(String station) {  //判断是否已经导入了点
-        for (Vertex vertex : vertices) {
-            if (vertex.getName().equals(station))
-                return vertex;
+        Vertex newStation = map.get(station);
+        if(newStation == null){
+            newStation = new Vertex(station);
+            vertices.add(newStation);
+            map.put(station,newStation);
         }
-        return  null;
+        return  newStation;
     }
+
 
     private int getTime(String start, String end) { //返回分钟数
         int length1 = start.length();
