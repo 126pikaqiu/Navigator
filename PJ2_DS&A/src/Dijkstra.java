@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Stack;
 
 class Dijkstra {
@@ -29,13 +30,13 @@ class Dijkstra {
     }
 
     private void relex(Vertex preVertex, Vertex now){ //松弛一条边
-        if(preVertex.getDistance() != Integer.MAX_VALUE && now.getDistance() > preVertex.getDistance() + preVertex.getEdge(now).getWeight()){//防止加法溢出
-            now.setDistance(preVertex.getDistance() + preVertex.getEdge(now).getWeight());
+        if(preVertex.getDistance() != Integer.MAX_VALUE && now.getDistance() > preVertex.getDistance() + preVertex.getEdge(now,false).getWeight()){//防止加法溢出
+            now.setDistance(preVertex.getDistance() + preVertex.getEdge(now,false).getWeight());
             now.setPreVertex(preVertex);
         }
     }
 
-    ArrayList<Vertex> getPath(ArrayList<Vertex> vertices1,Vertex start,Vertex end){ //返回路径列表
+    ArrayList<Vertex> getPath(ArrayList<Vertex> vertices1, Vertex start, Vertex end, HashMap<String,Vertex> map){ //返回路径列表
 
         if(lastPath1 != null){ //记忆
             ArrayList<Vertex> mayPath = checkPath(start,end,lastPath1);
@@ -67,18 +68,18 @@ class Dijkstra {
 
         DIJKSTRA(vertices1,start,end);
         ArrayList<Vertex> path = new ArrayList<>();
-        Stack<Vertex> vertices = new Stack<>();
-        vertices.push(end);
+        Stack<String> vertices = new Stack<>();
+        vertices.push(end.getName());
         while (end.getPreVertex() != null && end.getPreVertex() != start){
             end = end.getPreVertex();
-            vertices.push(end);
+            vertices.push(end.getName());
         }
         if(end.getPreVertex() == null){
             return null;
         }else{
             path.add(start);
             while (!vertices.empty()){
-                path.add(vertices.pop());
+                path.add(map.get(vertices.pop()));
             }
             if(lastPath1 == null){
                 lastPath1 = path;
