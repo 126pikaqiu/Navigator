@@ -34,12 +34,21 @@ class Vertex {
         return distance;
     }
 
-    Edge getEdge(Vertex vertex1){
-        for (Edge edge:edges){
-            if (edge.getOtherVertex(this) == vertex1){
-                return edge;
+    Edge getEdge(Vertex vertex1,boolean inverse){
+        if(!inverse){
+            for (Edge edge:edges){
+                if (edge.getOtherVertex(this) == vertex1){
+                    return edge;
+                }
+            }
+        }else{
+            for(int i = edges.size() - 1; i >= 0; i--){
+                if(edges.get(i).getOtherVertex(this) == vertex1){
+                    return edges.get(i);
+                }
             }
         }
+
         return null;//一般不可到达，到达即为错误
     }
 
