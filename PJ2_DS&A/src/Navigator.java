@@ -5,6 +5,7 @@ import jxl.read.biff.BiffException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 class Navigator {
     private ArrayList<Vertex> vertices = new ArrayList<>();
@@ -34,7 +35,6 @@ class Navigator {
 
                 newStation = null;
                 int j = sheet.getRows();//两个方向的站点对应的索引
-                String time3 = null;
                 binStation = null;
 
                 //导入中间站点
@@ -55,7 +55,6 @@ class Navigator {
                         if(binStation == null){
                             binStation = preStation;
                             j = i;
-                            time3 = time1;
                         }
                         if(time2.equals("--"))
                             continue;
@@ -75,7 +74,8 @@ class Navigator {
                 }
 
                 preStation = binStation;
-                time1 = time3;
+                if(j != sheet.getRows())
+                    time1 = sheet.getCell(2,j - 1).getContents();
                 for(; j < sheet.getRows(); j++) { //第二个方向的分站点
                     stationName = sheet.getCell(0, j).getContents();
                     time2 = sheet.getCell(2, j).getContents();
@@ -147,23 +147,20 @@ class Navigator {
             path.add(startV);
             return path;
         }
-        return dijkstra.getPath(vertices,startV,endV);
+        return dijkstra.getPath(vertices,startV,endV,map);
     }
 
     private ArrayList<String> getPath(String start, String end){
         ArrayList<Vertex> path = getPath1(start,end);
         ArrayList<String> path1 = new ArrayList<>();
-        if(path == null){
-            path1.add("您输入的站点不存在");
-            return path1;
-        }
+        assert path != null;
         Vertex preVertex = path.get(0);
         Vertex vertex;
         String line = "";
         for (int i = 1; i < path.size(); i++){
             vertex = path.get(i);
-            if(!vertex.getEdge(preVertex).getLine().equals(line)){
-                line = vertex.getEdge(preVertex).getLine();
+            if(!vertex.getEdge(preVertex,false).getLine().equals(line) && !vertex.getEdge(preVertex,true).getLine().equals(line)){
+                line = vertex.getEdge(preVertex,false).getLine();
                 path1.add(preVertex.getName());
                 path1.add("-");
                 path1.add(line);
@@ -178,14 +175,15 @@ class Navigator {
     ArrayList<String> getPath(String[] station){
         ArrayList<String> path = new ArrayList<>();
         for(String value:station){
-            if(exist(value) == null){
+            if(map.get(value) == null){
                 path.add("您输入的站点不存在");
                 return path;
             }
         }
 
         String pre = station[0];
-        getPath(pre,station[station.length - 1]); //走一遍从起点到终点的路线，可以作为记忆,可能极其重要哟。
+        if(station.length > 2)
+            getPath(pre,station[station.length - 1]); //走一遍从起点到终点的路线，可以作为记忆,可能极其重要哟。
         ArrayList<String> path1;
         int i;
         for(i = 1; i < station.length; i++){
