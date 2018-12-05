@@ -16,9 +16,8 @@ class Dijkstra {
                 break;
             }
             for(Vertex vertex:u.getVertices()){
-                relex(u,vertex);
+                relex(u,vertex,minHeap);
             }
-            minHeap.build_min_heap();
         }
     }
 
@@ -29,10 +28,11 @@ class Dijkstra {
         start.setDistance(0);
     }
 
-    private void relex(Vertex preVertex, Vertex now){ //松弛一条边
-        if(preVertex.getDistance() != Integer.MAX_VALUE && now.getDistance() > preVertex.getDistance() + preVertex.getEdge(now,false).getWeight()){//防止加法溢出
-            now.setDistance(preVertex.getDistance() + preVertex.getEdge(now,false).getWeight());
+    private void relex(Vertex preVertex, Vertex now,MinHeap minHeap){ //松弛一条边
+        if(preVertex.getDistance() != Integer.MAX_VALUE && now.getDistance() >= preVertex.getDistance() + preVertex.getEdge(now,false).getWeight()){//防止加法溢出
             now.setPreVertex(preVertex);
+            now.setDistance(preVertex.getDistance() + preVertex.getEdge(now,false).getWeight());
+            minHeap.update(now);
         }
     }
 
