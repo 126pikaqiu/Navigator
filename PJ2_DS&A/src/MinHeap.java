@@ -20,7 +20,7 @@ class MinHeap {
         build_min_heap();
     }
 
-    void build_min_heap(){
+    private void build_min_heap(){
         for(int i = heap.size() / 2 + 1;i >= 0; i--){
             min_heapify(i);
         }
@@ -53,11 +53,29 @@ class MinHeap {
         }
     }
 
+    void update(Vertex element){
+        int index;
+        for(index = 0; index < heap.size(); index++){
+            if(heap.get(index).getName().equals(element.getName())){
+                break;
+            }
+        }
+        while(index > 0 && heap.get(parent(index)).getDistance() > heap.get(index).getDistance()){
+            Vertex temp = heap.get(index);
+            heap.set(index, heap.get(parent(index)));
+            heap.set(parent(index),temp);
+            index = parent(index);
+        }
+    }
+
     Vertex extract_min(){//取出最小的元素
         if(heap.size() < 1){
             throw new Error("heap underflow");
         }
         Vertex min = heap.remove(0);
+        if(heap.size() == 0){
+            return min;
+        }
         Vertex last = heap.remove(heap.size() - 1);
         heap.add(0,last);
         if(heap.size() > 1)
